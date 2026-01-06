@@ -1,0 +1,43 @@
+### Health Check
+GET http://localhost:5000/
+
+###
+
+### Get all notes
+GET http://localhost:5000/api/notes
+
+###
+
+### Create a new note
+POST http://localhost:5000/api/notes
+Content-Type: application/json
+
+{
+  "title": "My First Note",
+  "content": "This is the content of my first note",
+  "tags": ["personal", "ideas"]
+}
+
+###
+
+### Get a specific note (replace with actual ID)
+GET http://localhost:5000/api/notes/YOUR_NOTE_ID_HERE
+
+###
+
+### Update a note (replace with actual ID)
+PUT http://localhost:5000/api/notes/YOUR_NOTE_ID_HERE
+Content-Type: application/json
+
+{
+  "title": "Updated Note Title",
+  "content": "Updated content",
+  "tags": ["updated", "modified"]
+}
+
+###
+
+### Delete a note (replace with actual ID)
+DELETE http://localhost:5000/api/notes/YOUR_NOTE_ID_HERE
+
+###

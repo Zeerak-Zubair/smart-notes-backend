@@ -1,0 +1,24 @@
+{
+  "name": "smart-notes-backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Zeerak-Zubair/smart-notes-backend#readme",
+  "bugs": {
+    "url": "https://github.com/Zeerak-Zubair/smart-notes-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zeerak-Zubair/smart-notes-backend.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -37,8 +37,6 @@ export interface UpdateNotebookDTO {
   title?: string;
   description?: string;
   color?: string;
-  folder_id?: number;
-  order_index?: number;
 }
 
 export interface Note {
@@ -80,7 +78,6 @@ export interface CreateProfileDTO {
 }
 
 export interface UpdateProfileDTO {
-  name?: string;
-  avatar_url?: string;
-  email?: string;
+  name: string;
+  user_id: string;
 }

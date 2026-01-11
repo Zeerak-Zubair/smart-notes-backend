@@ -6,8 +6,12 @@ import {
   updateNote,
   deleteNote
 } from '../controllers/notesController';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
+
+// Apply authentication middleware to all routes
+// router.use(requireAuth);
 
 /**
  * @swagger

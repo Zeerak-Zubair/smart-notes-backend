@@ -4,10 +4,15 @@ import {
   getNotebookById,
   createNotebook,
   updateNotebook,
-  deleteNotebook
+  deleteNotebook,
+  getAllNotebooksCount
 } from '../controllers/notebooksController';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
+
+// Apply authentication middleware to all routes
+// router.use(requireAuth);
 
 /**
  * @swagger
@@ -47,6 +52,41 @@ const router = Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.get('/', getAllNotebooks);
+
+/**
+ * @swagger
+ * /api/notebooks/count/{id}:
+ *   get:
+ *     summary: Get count of all notebooks filtered by folder
+ *     tags: [Notebooks]
+ *     parameters:
+ *       - in: query
+ *         name: folder_id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Filter notebooks by folder ID
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Count of notebooks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   description: Total number of notebooks
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/count', getAllNotebooksCount);
 
 /**
  * @swagger

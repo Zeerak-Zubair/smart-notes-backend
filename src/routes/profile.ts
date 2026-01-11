@@ -7,8 +7,13 @@ import {
   updateProfile,
   deleteProfile
 } from '../controllers/profileController';
+import { requireAuth } from '../middleware/auth';
+import { upload } from '../middleware/upload';
 
 const router = Router();
+
+// Apply authentication middleware to all routes
+// router.use(requireAuth);
 
 /**
  * @swagger
@@ -218,7 +223,7 @@ router.post('/', createProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', updateProfile);
+router.put('/:id', upload.single('image'), updateProfile);
 
 /**
  * @swagger

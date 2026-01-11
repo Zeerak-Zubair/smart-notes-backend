@@ -1,0 +1,1140 @@
+openapi: 3.0.0
+info:
+  title: Smart Notes API
+  version: 1.0.0
+  description: API documentation for Smart Notes application
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:5000
+    description: Development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+        email:
+          type: string
+          description: User email
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Note ID
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: 2024-01-01T12:00:00Z
+        notebook_id:
+          type: integer
+          description: ID of the notebook this note belongs to
+          example: 1
+        content:
+          type: string
+          nullable: true
+          description: Note content
+          example: This is my first note
+        order_index:
+          type: integer
+          nullable: true
+          description: Order position of the note
+          example: 0
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last update timestamp
+          example: 2024-01-01T12:00:00Z
+      required:
+        - id
+        - created_at
+        - notebook_id
+    Folder:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Folder ID
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: 2024-01-01T12:00:00Z
+        title:
+          type: string
+          description: Folder title
+          example: Work Projects
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user who owns the folder
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+        - id
+        - created_at
+        - title
+        - user_id
+    Notebook:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Notebook ID
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: 2024-01-01T12:00:00Z
+        title:
+          type: string
+          description: Notebook title
+          example: My First Notebook
+        description:
+          type: string
+          description: Notebook description
+          example: This is a notebook for personal notes
+        color:
+          type: string
+          description: Notebook color (hex code or color name)
+          example: "#3B82F6"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: 2024-01-01T12:00:00Z
+        folder_id:
+          type: integer
+          description: ID of the folder this notebook belongs to
+          example: 1
+        order_index:
+          type: integer
+          description: Order position of the notebook
+          example: 0
+      required:
+        - id
+        - created_at
+        - title
+        - description
+        - color
+        - updated_at
+        - folder_id
+        - order_index
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Profile ID
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: 2024-01-01T12:00:00Z
+        name:
+          type: string
+          description: User's full name
+          example: John Doe
+        avatar_url:
+          type: string
+          description: URL to user's avatar image
+          example: https://example.com/avatar.jpg
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last update timestamp
+          example: 2024-01-01T12:00:00Z
+        email:
+          type: string
+          format: email
+          description: User's email address (unique)
+          example: john.doe@example.com
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated user ID from auth.users
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+        - id
+        - created_at
+        - name
+        - avatar_url
+        - email
+paths:
+  /api/auth/signup:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: Password123!
+                image:
+                  type: string
+                  format: binary
+                  description: User profile image (optional)
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/signin:
+    post:
+      summary: Sign in an existing user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: Password123!
+      responses:
+        "200":
+          description: Successfully signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  session:
+                    type: object
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/signout:
+    post:
+      summary: Sign out the current user
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully signed out
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/session:
+    get:
+      summary: Get current user session
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current session information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  session:
+                    type: object
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/folders:
+    get:
+      summary: Get all folders for a user
+      tags:
+        - Folders
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The user ID to fetch folders for
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  folders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Folder"
+                  count:
+                    type: integer
+                    description: Total number of folders
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new folder
+      tags:
+        - Folders
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - user_id
+              properties:
+                title:
+                  type: string
+                  description: Folder title
+                  example: Work Projects
+                user_id:
+                  type: string
+                  format: uuid
+                  description: ID of the user creating the folder
+                  example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        "201":
+          description: Folder created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Folder created successfully
+                  folder:
+                    $ref: "#/components/schemas/Folder"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/folders/{id}":
+    get:
+      summary: Get a folder by ID
+      tags:
+        - Folders
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The folder ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Folder details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Folder"
+        "404":
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a folder
+      tags:
+        - Folders
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The folder ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: Updated folder title
+                  example: Personal Projects
+      responses:
+        "200":
+          description: Folder updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Folder updated successfully
+                  folder:
+                    $ref: "#/components/schemas/Folder"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a folder
+      tags:
+        - Folders
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The folder ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Folder deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Folder deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/notebooks:
+    get:
+      summary: Get all notebooks (optionally filtered by folder)
+      tags:
+        - Notebooks
+      parameters:
+        - in: query
+          name: folder_id
+          required: false
+          schema:
+            type: integer
+          description: Filter notebooks by folder ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of notebooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notebooks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notebook"
+                  count:
+                    type: integer
+                    description: Total number of notebooks
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new notebook
+      tags:
+        - Notebooks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - color
+                - folder_id
+                - order_index
+              properties:
+                title:
+                  type: string
+                  description: Notebook title
+                  example: My First Notebook
+                description:
+                  type: string
+                  description: Notebook description
+                  example: This is a notebook for personal notes
+                color:
+                  type: string
+                  description: Notebook color (hex code or color name)
+                  example: "#3B82F6"
+                folder_id:
+                  type: integer
+                  description: ID of the folder this notebook belongs to
+                  example: 1
+                order_index:
+                  type: integer
+                  description: Order position of the notebook
+                  example: 0
+      responses:
+        "201":
+          description: Notebook created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Notebook created successfully
+                  notebook:
+                    $ref: "#/components/schemas/Notebook"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/notebooks/count/{id}":
+    get:
+      summary: Get count of all notebooks filtered by folder
+      tags:
+        - Notebooks
+      parameters:
+        - in: query
+          name: folder_id
+          required: false
+          schema:
+            type: integer
+          description: Filter notebooks by folder ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Count of notebooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Total number of notebooks
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/notebooks/{id}":
+    get:
+      summary: Get a notebook by ID
+      tags:
+        - Notebooks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The notebook ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Notebook details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notebook"
+        "404":
+          description: Notebook not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a notebook
+      tags:
+        - Notebooks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The notebook ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Updated notebook title
+                  example: Updated Notebook
+                description:
+                  type: string
+                  description: Updated notebook description
+                  example: Updated description
+                color:
+                  type: string
+                  description: Updated notebook color
+                  example: "#10B981"
+                folder_id:
+                  type: integer
+                  description: Updated folder ID
+                  example: 2
+                order_index:
+                  type: integer
+                  description: Updated order position
+                  example: 1
+      responses:
+        "200":
+          description: Notebook updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Notebook updated successfully
+                  notebook:
+                    $ref: "#/components/schemas/Notebook"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a notebook
+      tags:
+        - Notebooks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The notebook ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Notebook deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Notebook deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/notes:
+    get:
+      summary: Get all notes (optionally filtered by notebook)
+      tags:
+        - Notes
+      parameters:
+        - in: query
+          name: notebook_id
+          required: false
+          schema:
+            type: integer
+          description: Filter notes by notebook ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Note"
+                  count:
+                    type: integer
+                    description: Total number of notes
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new note
+      tags:
+        - Notes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - notebook_id
+              properties:
+                notebook_id:
+                  type: integer
+                  description: ID of the notebook this note belongs to
+                  example: 1
+                content:
+                  type: string
+                  description: Note content
+                  example: This is my first note
+                order_index:
+                  type: integer
+                  description: Order position of the note
+                  example: 0
+      responses:
+        "201":
+          description: Note created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note created successfully
+                  note:
+                    $ref: "#/components/schemas/Note"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/notes/{id}":
+    get:
+      summary: Get a note by ID
+      tags:
+        - Notes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The note ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Note details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a note
+      tags:
+        - Notes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The note ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  description: Updated note content
+                  example: Updated note content
+                notebook_id:
+                  type: integer
+                  description: Updated notebook ID
+                  example: 2
+                order_index:
+                  type: integer
+                  description: Updated order position
+                  example: 1
+      responses:
+        "200":
+          description: Note updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note updated successfully
+                  note:
+                    $ref: "#/components/schemas/Note"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a note
+      tags:
+        - Notes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The note ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Note deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/profile:
+    get:
+      summary: Get all profiles
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Profile"
+                  count:
+                    type: integer
+                    description: Total number of profiles
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new profile
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  description: User's full name
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  description: User's email address (must be unique)
+                  example: john.doe@example.com
+                avatar_url:
+                  type: string
+                  description: URL to user's avatar image
+                  example: https://example.com/avatar.jpg
+                user_id:
+                  type: string
+                  format: uuid
+                  description: Associated user ID from auth.users
+                  example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        "201":
+          description: Profile created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile created successfully
+                  profile:
+                    $ref: "#/components/schemas/Profile"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/profile/{id}":
+    get:
+      summary: Get a profile by ID
+      tags:
+        - Profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The profile ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a profile
+      tags:
+        - Profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The profile ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Updated user's full name
+                  example: Jane Doe
+                email:
+                  type: string
+                  format: email
+                  description: Updated email address
+                  example: jane.doe@example.com
+                avatar_url:
+                  type: string
+                  description: Updated avatar URL
+                  example: https://example.com/new-avatar.jpg
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile updated successfully
+                  profile:
+                    $ref: "#/components/schemas/Profile"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a profile
+      tags:
+        - Profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The profile ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile deleted successfully
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/profile/user/{user_id}":
+    get:
+      summary: Get a profile by user ID
+      tags:
+        - Profile
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The user ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+tags: []

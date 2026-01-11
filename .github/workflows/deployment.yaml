@@ -43,7 +43,7 @@ jobs:
           find target-repo -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
           # Copy all files from docs/ to target repo
-          cp -r docs/* target-repo/
+          cp -r docs/* target-repo/docs/
 
           # Verify files were copied
           ls -la target-repo/
@@ -76,7 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DOCS_DEPLOY_TOKEN }}
         run: |
           cd target-repo
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/Zeerak-Zubair/smart-notes-api-docs.git HEAD:master
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/Zeerak-Zubair/smart-notes-api-docs.git HEAD:main
 
       - name: Report deployment status
         if: success()

@@ -3,16 +3,10 @@ name: Deploy Docs to External Repository
 on:
   push:
     branches:
-      - development
-    paths:
-      - "docs/**"
-      - ".github/workflows/deployment.yml"
+      - main
   pull_request:
     branches:
-      - development
-    paths:
-      - "docs/**"
-      - ".github/workflows/deployment.yml"
+      - main
 
 jobs:
   deploy-docs:

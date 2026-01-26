@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import notesRouter from './routes/notes';
 import authRouter from './routes/auth';
-import foldersRouter from './routes/folders';
 import notebooksRouter from './routes/notebooks';
 import profileRouter from './routes/profile';
+import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { swaggerSpec } from './config/swagger';
 
@@ -34,7 +34,6 @@ app.get('/', (_req: Request, res: Response) => {
     endpoints: {
       notes: '/api/notes',
       auth: '/api/auth',
-      folders: '/api/folders',
       notebooks: '/api/notebooks',
       profile: '/api/profile',
       documentation: '/api-docs'
@@ -43,10 +42,9 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRouter);
-app.use('/api/notes', notesRouter);
-app.use('/api/folders', foldersRouter);
-app.use('/api/notebooks', notebooksRouter);
-app.use('/api/profile', profileRouter);
+app.use('/api/notes', requireAuth, notesRouter);
+app.use('/api/notebooks', requireAuth, notebooksRouter);
+app.use('/api/profile', requireAuth, profileRouter);
 
 // Error handling middleware (should be last)
 app.use(errorHandler);

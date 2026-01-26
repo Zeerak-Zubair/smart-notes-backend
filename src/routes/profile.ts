@@ -3,6 +3,7 @@ import {
   getAllProfiles,
   getProfileById,
   getProfileByUserId,
+  getCurrentProfile,
   createProfile,
   updateProfile,
   deleteProfile
@@ -13,7 +14,7 @@ import { upload } from '../middleware/upload';
 const router = Router();
 
 // Apply authentication middleware to all routes
-// router.use(requireAuth);
+router.use(requireAuth);
 
 /**
  * @swagger
@@ -49,6 +50,30 @@ router.get('/', getAllProfiles);
 
 /**
  * @swagger
+ * /api/profile/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Profile'
+ *       404:
+ *         description: Profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/me', getCurrentProfile);
+
+/**
+ * @swagger
  * /api/profile/{id}:
  *   get:
  *     summary: Get a profile by ID
@@ -58,7 +83,8 @@ router.get('/', getAllProfiles);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The profile ID
  *     security:
  *       - bearerAuth: []
@@ -170,17 +196,10 @@ router.post('/', createProfile);
 
 /**
  * @swagger
- * /api/profile/{id}:
+ * /api/profile:
  *   put:
- *     summary: Update a profile
+ *     summary: Update current user profile
  *     tags: [Profile]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The profile ID
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -192,17 +211,10 @@ router.post('/', createProfile);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Updated user's full name
- *                 example: Jane Doe
  *               email:
  *                 type: string
- *                 format: email
- *                 description: Updated email address
- *                 example: jane.doe@example.com
  *               avatar_url:
  *                 type: string
- *                 description: Updated avatar URL
- *                 example: https://example.com/new-avatar.jpg
  *     responses:
  *       200:
  *         description: Profile updated successfully
@@ -223,21 +235,14 @@ router.post('/', createProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', upload.single('image'), updateProfile);
+router.put('/', upload.single('image'), updateProfile);
 
 /**
  * @swagger
- * /api/profile/{id}:
+ * /api/profile:
  *   delete:
- *     summary: Delete a profile
+ *     summary: Delete current user profile
  *     tags: [Profile]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The profile ID
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -258,6 +263,6 @@ router.put('/:id', upload.single('image'), updateProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:id', deleteProfile);
+router.delete('/', deleteProfile);
 
 export default router;

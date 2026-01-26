@@ -11,7 +11,7 @@ import { requireAuth } from '../middleware/auth';
 const router = Router();
 
 // Apply authentication middleware to all routes
-// router.use(requireAuth);
+router.use(requireAuth);
 
 /**
  * @swagger

@@ -4,18 +4,15 @@ import { CreateNotebookDTO, UpdateNotebookDTO } from '../types';
 
 export async function getAllNotebooks(req: Request, res: Response, next: NextFunction) {
   try {
-    const { folder_id } = req.query;
-    console.log('[getAllNotebooks] Request received:', { folder_id });
-
-    let query = supabase.from('notebooks').select('*');
-
-    if (folder_id) {
-      console.log('[getAllNotebooks] Filtering by folder_id:', folder_id);
-      query = query.eq('folder_id', folder_id);
-    }
+    const userId = (req as any).userId;
+    console.log('[getAllNotebooks] Request received for user:', userId);
 
     console.log('[getAllNotebooks] Fetching notebooks from database');
-    const { data, error } = await query.order('order_index', { ascending: true });
+    const { data, error } = await supabase
+      .from('notebooks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('order_index', { ascending: true });
 
     if (error) {
       console.error('[getAllNotebooks] Database error:', error);
@@ -36,16 +33,16 @@ export async function getAllNotebooks(req: Request, res: Response, next: NextFun
 
 export async function getAllNotebooksCount(req: Request, res: Response, next: NextFunction) {
   try {
-    const { folder_id } = req.query;
-    console.log('[getAllNotebooksCount] Request received:', { folder_id });
+    const userId = (req as any).userId;
+    console.log('[getAllNotebooksCount] Request received for user:', userId);
 
     let query = supabase
     .from('notebooks')
-    .select('*')
-    .eq('folder_id', folder_id);
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
 
-    console.log('[getAllNotebooksCount] Fetching notebooks from database');
-    const { data, error } = await query;
+    console.log('[getAllNotebooksCount] Fetching notebooks count from database');
+    const { count, error } = await query;
 
     if (error) {
       console.error('[getAllNotebooksCount] Database error:', error);
@@ -53,9 +50,9 @@ export async function getAllNotebooksCount(req: Request, res: Response, next: Ne
       return;
     }
 
-    console.log('[getAllNotebooksCount] Successfully fetched notebooks:', { count: data.length });
+    console.log('[getAllNotebooksCount] Successfully fetched notebooks count:', count);
     res.status(200).json({
-      count: data.length
+      count: count
     });
   } catch (error) {
     console.error('[getAllNotebooksCount] Unexpected error:', error);
@@ -67,6 +64,7 @@ export async function getAllNotebooksCount(req: Request, res: Response, next: Ne
 export async function getNotebookById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    const userId = (req as any).userId;
     console.log('[getNotebookById] Request received:', { id });
 
     console.log('[getNotebookById] Fetching notebook from database:', id);
@@ -74,6 +72,7 @@ export async function getNotebookById(req: Request, res: Response, next: NextFun
       .from('notebooks')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId) // Ensure user owns the notebook
       .single();
 
     if (error) {
@@ -92,18 +91,18 @@ export async function getNotebookById(req: Request, res: Response, next: NextFun
 
 export async function createNotebook(req: Request, res: Response, next: NextFunction) {
   try {
-    const { title, description, color, folder_id, order_index }: CreateNotebookDTO = req.body;
-    console.log('[createNotebook] Request received:', { title, description, color, folder_id, order_index });
+    const { title, description, color, order_index }: CreateNotebookDTO = req.body;
+    const userId = (req as any).userId;
+    console.log('[createNotebook] Request received:', { title, description, color, order_index, userId });
 
-    if (!title || !description || !color || !folder_id || order_index === undefined) {
+    if (!title || !description || !color || order_index === undefined) {
       console.log('[createNotebook] Validation failed:', {
         title: !!title,
         description: !!description,
         color: !!color,
-        folder_id: !!folder_id,
         order_index: order_index !== undefined
       });
-      res.status(400).json({ error: 'title, description, color, folder_id, and order_index are required' });
+      res.status(400).json({ error: 'title, description, color, and order_index are required' });
       return;
     }
 
@@ -114,7 +113,7 @@ export async function createNotebook(req: Request, res: Response, next: NextFunc
         title,
         description,
         color,
-        folder_id,
+        user_id: userId,
         order_index,
         updated_at: new Date().toISOString()
       }])
@@ -142,6 +141,7 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
   try {
     const { id } = req.params;
     const { title, description, color}: UpdateNotebookDTO = req.body;
+    const userId = (req as any).userId;
     console.log('[updateNotebook] Request received:', { id, title, description, color });
 
     const updateData: any = {
@@ -157,6 +157,7 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
       .from('notebooks')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', userId) // Ensure ownership
       .select()
       .single();
 
@@ -180,13 +181,15 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
 export async function deleteNotebook(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    const userId = (req as any).userId;
     console.log('[deleteNotebook] Request received:', { id });
 
     console.log('[deleteNotebook] Deleting notebook from database:', id);
     const { error } = await supabase
       .from('notebooks')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId); // Ensure ownership
 
     if (error) {
       console.error('[deleteNotebook] Database error:', error);

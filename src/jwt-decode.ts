@@ -1,0 +1,15 @@
+import { extractUserIdFromJWT, isJWTExpired } from "./utils/jwt.utils";
+
+// From a token string
+const jwtToken = "eyJhbGciOiJFUzI1NiIsImtpZCI6IjVmZjQ3YzJmLTk5YjItNDljZC1hOGE3LTYyN2E3NmI2OTg2YSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3dpdHR3aWt1bnpmZWFseWVrdXJzLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIyN2Q4NTM5YS1lNzA1LTRkYTItYTQ2OC0zZjA4ZDZhYjIzYzUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY4MjM5NDA2LCJpYXQiOjE3NjgyMzU4MDYsImVtYWlsIjoiemVlcmFrenViYWlyMDQ3QGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJ6ZWVyYWt6dWJhaXIwNDdAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwic3ViIjoiMjdkODUzOWEtZTcwNS00ZGEyLWE0NjgtM2YwOGQ2YWIyM2M1In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NjgyMzU4MDZ9XSwic2Vzc2lvbl9pZCI6IjdkZWIyYzk2LTZiZjgtNDFkMy05MTNiLTAxOTg5OGFkYzc5NSIsImlzX2Fub255bW91cyI6ZmFsc2V9.aiLgYpuzkNrXIH8_tAYHdNaFOkTzG0RhV3kmLeBqto5EEnqdoGRGGFDdN4D2rjtNmXg1GGb5HjItWw29yUf2bg";
+const userId = extractUserIdFromJWT(jwtToken);
+console.log("Extracted user id: " + userId);
+
+// // From Authorization header
+// import { extractUserIdFromAuthHeader } from '@/utils';
+// const userId = extractUserIdFromAuthHeader(request.headers.authorization);
+
+// Check if token is expired
+if (isJWTExpired(jwtToken)) {
+  console.log('Token has expired');
+}

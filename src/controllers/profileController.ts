@@ -30,16 +30,42 @@ export async function getAllProfiles(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function getCurrentProfile(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).userId;
+    console.log('[getCurrentProfile] Request received for user:', userId);
+
+    console.log('[getCurrentProfile] Fetching profile from database:', userId);
+    const { data, error } = await supabase
+      .from('profile')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('[getCurrentProfile] Profile not found or database error:', { userId, error });
+      res.status(404).json({ error: 'Profile not found' });
+      return;
+    }
+
+    console.log('[getCurrentProfile] Successfully fetched profile:', { userId });
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('[getCurrentProfile] Unexpected error:', error);
+    next(error);
+  }
+}
+
 export async function getProfileById(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // This id is arguably user_id based on schema
     console.log('[getProfileById] Request received:', { id });
 
     console.log('[getProfileById] Fetching profile from database:', id);
     const { data, error } = await supabase
       .from('profile')
       .select('*')
-      .eq('id', id)
+      .eq('user_id', id)
       .single();
 
     if (error) {
@@ -84,11 +110,13 @@ export async function getProfileByUserId(req: Request, res: Response, next: Next
 
 export async function createProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, email, avatar_url, user_id }: CreateProfileDTO = req.body;
-    console.log('[createProfile] Request received:', { name, email, hasAvatar: !!avatar_url, user_id });
+    const { name, email, avatar_url }: CreateProfileDTO = req.body;
+    const userId = (req as any).userId;
 
-    if (!name || !email) {
-      console.log('[createProfile] Validation failed:', { name: !!name, email: !!email });
+    console.log('[createProfile] Request received:', { name, email, hasAvatar: !!avatar_url, userId });
+
+    if (!name || !email || !userId) {
+      console.log('[createProfile] Validation failed:', { name: !!name, email: !!email, userId: !!userId });
       res.status(400).json({ error: 'name and email are required' });
       return;
     }
@@ -96,11 +124,11 @@ export async function createProfile(req: Request, res: Response, next: NextFunct
     const insertData: any = {
       name,
       email,
+      user_id: userId,
       updated_at: new Date().toISOString()
     };
 
     if (avatar_url !== undefined) insertData.avatar_url = avatar_url;
-    if (user_id !== undefined) insertData.user_id = user_id;
 
     console.log('[createProfile] Creating profile in database');
     const { data, error } = await supabase
@@ -115,7 +143,7 @@ export async function createProfile(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    console.log('[createProfile] Profile created successfully:', { id: data.id });
+    console.log('[createProfile] Profile created successfully:', { user_id: userId });
     res.status(201).json({
       message: 'Profile created successfully',
       profile: data
@@ -128,23 +156,22 @@ export async function createProfile(req: Request, res: Response, next: NextFunct
 
 export async function updateProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
-    console.log(id);
-    console.log(req.body);
-    const { name, user_id } = req.body;
+    const userId = (req as any).userId;
+    const { name } = req.body;
     const image = req.file;
-    console.log('[updateProfile] Request received:', { id, name, user_id, hasImage: !!image });
+
+    console.log('[updateProfile] Request received:', { userId, name, hasImage: !!image });
 
     let avatarUrl = '';
 
     // Upload image if provided
     if (image) {
       try {
-        console.log('[updateProfile] Uploading avatar image:', { profileId: id, userId: user_id });
+        console.log('[updateProfile] Uploading avatar image:', { userId });
         const { publicUrl } = await uploadImage({
           file: image,
           bucket: 'smart_notes',
-          userId: user_id || id
+          userId: userId
         });
         avatarUrl = publicUrl;
         console.log('[updateProfile] Avatar uploaded successfully:', { avatarUrl });
@@ -162,11 +189,11 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
     if (name !== undefined) updateData.name = name;
     if (avatarUrl) updateData.avatar_url = avatarUrl;
 
-    console.log('[updateProfile] Updating profile in database:', { id, updateFields: Object.keys(updateData) });
+    console.log('[updateProfile] Updating profile in database:', { userId, updateFields: Object.keys(updateData) });
     const { data, error } = await supabase
       .from('profile')
       .update(updateData)
-      .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -176,7 +203,7 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    console.log('[updateProfile] Profile updated successfully:', { id });
+    console.log('[updateProfile] Profile updated successfully:', { userId });
     res.status(200).json({
       message: 'Profile updated successfully',
       profile: data
@@ -189,14 +216,14 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 
 export async function deleteProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
-    console.log('[deleteProfile] Request received:', { id });
+    const userId = (req as any).userId;
+    console.log('[deleteProfile] Request received:', { userId });
 
-    console.log('[deleteProfile] Deleting profile from database:', id);
+    console.log('[deleteProfile] Deleting profile from database:', { userId });
     const { error } = await supabase
       .from('profile')
       .delete()
-      .eq('id', id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('[deleteProfile] Database error:', error);
@@ -204,7 +231,7 @@ export async function deleteProfile(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    console.log('[deleteProfile] Profile deleted successfully:', { id });
+    console.log('[deleteProfile] Profile deleted successfully:', { userId });
     res.status(200).json({
       message: 'Profile deleted successfully'
     });

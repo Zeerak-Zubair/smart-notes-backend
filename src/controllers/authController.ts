@@ -72,7 +72,11 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
     res.status(201).json({
       message: 'User created successfully',
       success: true,
-      session: data.session
+      access_token: data.session?.access_token || '',
+      token_type: 'bearer',
+      expires_in: data.session?.expires_in || 0,
+      expires_at: data.session?.expires_at || 0,
+      refresh_token: data.session?.refresh_token || ''
     });
   } catch (error) {
     console.error('[signup] Unexpected error:', error);
@@ -107,7 +111,11 @@ export async function signin(req: Request, res: Response, next: NextFunction) {
     res.status(200).json({
       message: 'Signed in successfully',
       success: true,
-      session: data.session
+      access_token: data.session?.access_token || '',
+      token_type: 'bearer',
+      expires_in: data.session?.expires_in || 0,
+      expires_at: data.session?.expires_at || 0,
+      refresh_token: data.session?.refresh_token || '',
     });
   } catch (error) {
     console.error('[signin] Unexpected error:', error);

@@ -5,7 +5,8 @@ import { CreateNoteDTO, UpdateNoteDTO } from '../types';
 export async function getAllNotes(req: Request, res: Response, next: NextFunction) {
   try {
     const { notebook_id } = req.query;
-    console.log('[getAllNotes] Request received:', { notebook_id });
+    const userId = (req as any).userId;
+    console.log('[getAllNotes] Request received:', { notebook_id, userId });
 
     let query = supabase.from('notes').select('*');
 
@@ -37,7 +38,8 @@ export async function getAllNotes(req: Request, res: Response, next: NextFunctio
 export async function getNoteById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
-    console.log('[getNoteById] Request received:', { id });
+    const userId = (req as any).userId;
+    console.log('[getNoteById] Request received:', { id, userId });
 
     console.log('[getNoteById] Fetching note from database:', id);
     const { data, error } = await supabase
@@ -63,7 +65,8 @@ export async function getNoteById(req: Request, res: Response, next: NextFunctio
 export async function createNote(req: Request, res: Response, next: NextFunction) {
   try {
     const { notebook_id, content, order_index }: CreateNoteDTO = req.body;
-    console.log('[createNote] Request received:', { notebook_id, content: content?.substring(0, 50), order_index });
+    const userId = (req as any).userId;
+    console.log('[createNote] Request received:', { notebook_id, content: content?.substring(0, 50), order_index, userId });
 
     if (!notebook_id) {
       console.log('[createNote] Validation failed: notebook_id is missing');
@@ -107,7 +110,8 @@ export async function updateNote(req: Request, res: Response, next: NextFunction
   try {
     const { id } = req.params;
     const { content, notebook_id, order_index }: UpdateNoteDTO = req.body;
-    console.log('[updateNote] Request received:', { id, content: content?.substring(0, 50), notebook_id, order_index });
+    const userId = (req as any).userId;
+    console.log('[updateNote] Request received:', { id, content: content?.substring(0, 50), notebook_id, order_index, userId });
 
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -145,7 +149,8 @@ export async function updateNote(req: Request, res: Response, next: NextFunction
 export async function deleteNote(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
-    console.log('[deleteNote] Request received:', { id });
+    const userId = (req as any).userId;
+    console.log('[deleteNote] Request received:', { id, userId });
 
     console.log('[deleteNote] Deleting note from database:', id);
     const { error } = await supabase

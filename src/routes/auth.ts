@@ -42,7 +42,29 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User created successfully
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 access_token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 token_type:
+ *                   type: string
+ *                   example: bearer
+ *                 expires_in:
+ *                   type: number
+ *                   example: 3600
+ *                 expires_at:
+ *                   type: number
+ *                   example: 1673456789
+ *                 refresh_token:
+ *                   type: string
+ *                   example: v1.MRjHEGphZPMnHc7wK9rg...
  *       400:
  *         description: Invalid input
  *         content:
@@ -84,10 +106,27 @@ router.post('/signup', upload.single('image'), signup);
  *             schema:
  *               type: object
  *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 session:
- *                   type: object
+ *                 message:
+ *                   type: string
+ *                   example: Signed in successfully
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 access_token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 token_type:
+ *                   type: string
+ *                   example: bearer
+ *                 expires_in:
+ *                   type: number
+ *                   example: 3600
+ *                 expires_at:
+ *                   type: number
+ *                   example: 1673456789
+ *                 refresh_token:
+ *                   type: string
+ *                   example: v1.MRjHEGphZPMnHc7wK9rg...
  *       401:
  *         description: Invalid credentials
  *         content:

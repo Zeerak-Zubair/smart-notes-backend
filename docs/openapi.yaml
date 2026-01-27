@@ -181,6 +181,8 @@ components:
         - name
         - avatar_url
         - email
+security:
+  - bearerAuth: []
 paths:
   /api/auth/signup:
     post:
@@ -219,7 +221,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+                  success:
+                    type: boolean
+                    example: true
+                  access_token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  token_type:
+                    type: string
+                    example: bearer
+                  expires_in:
+                    type: number
+                    example: 3600
+                  expires_at:
+                    type: number
+                    example: 1673456789
+                  refresh_token:
+                    type: string
+                    example: v1.MRjHEGphZPMnHc7wK9rg...
         "400":
           description: Invalid input
           content:
@@ -257,10 +281,27 @@ paths:
               schema:
                 type: object
                 properties:
-                  user:
-                    $ref: "#/components/schemas/User"
-                  session:
-                    type: object
+                  message:
+                    type: string
+                    example: Signed in successfully
+                  success:
+                    type: boolean
+                    example: true
+                  access_token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  token_type:
+                    type: string
+                    example: bearer
+                  expires_in:
+                    type: number
+                    example: 3600
+                  expires_at:
+                    type: number
+                    example: 1673456789
+                  refresh_token:
+                    type: string
+                    example: v1.MRjHEGphZPMnHc7wK9rg...
         "401":
           description: Invalid credentials
           content:
@@ -304,188 +345,6 @@ paths:
                     type: object
         "401":
           description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /api/folders:
-    get:
-      summary: Get all folders for a user
-      tags:
-        - Folders
-      parameters:
-        - in: query
-          name: user_id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: The user ID to fetch folders for
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: List of folders
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  folders:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Folder"
-                  count:
-                    type: integer
-                    description: Total number of folders
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    post:
-      summary: Create a new folder
-      tags:
-        - Folders
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - title
-                - user_id
-              properties:
-                title:
-                  type: string
-                  description: Folder title
-                  example: Work Projects
-                user_id:
-                  type: string
-                  format: uuid
-                  description: ID of the user creating the folder
-                  example: 123e4567-e89b-12d3-a456-426614174000
-      responses:
-        "201":
-          description: Folder created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Folder created successfully
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  "/api/folders/{id}":
-    get:
-      summary: Get a folder by ID
-      tags:
-        - Folders
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The folder ID
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Folder details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Folder"
-        "404":
-          description: Folder not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    put:
-      summary: Update a folder
-      tags:
-        - Folders
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The folder ID
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - title
-              properties:
-                title:
-                  type: string
-                  description: Updated folder title
-                  example: Personal Projects
-      responses:
-        "200":
-          description: Folder updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Folder updated successfully
-                  folder:
-                    $ref: "#/components/schemas/Folder"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    delete:
-      summary: Delete a folder
-      tags:
-        - Folders
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The folder ID
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Folder deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Folder deleted successfully
-        "400":
-          description: Bad request
           content:
             application/json:
               schema:
@@ -1000,44 +859,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  "/api/profile/{id}":
-    get:
-      summary: Get a profile by ID
-      tags:
-        - Profile
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The profile ID
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Profile details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Profile"
-        "404":
-          description: Profile not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     put:
-      summary: Update a profile
+      summary: Update current user profile
       tags:
         - Profile
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The profile ID
       security:
         - bearerAuth: []
       requestBody:
@@ -1049,17 +874,10 @@ paths:
               properties:
                 name:
                   type: string
-                  description: Updated user's full name
-                  example: Jane Doe
                 email:
                   type: string
-                  format: email
-                  description: Updated email address
-                  example: jane.doe@example.com
                 avatar_url:
                   type: string
-                  description: Updated avatar URL
-                  example: https://example.com/new-avatar.jpg
       responses:
         "200":
           description: Profile updated successfully
@@ -1080,16 +898,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     delete:
-      summary: Delete a profile
+      summary: Delete current user profile
       tags:
         - Profile
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: The profile ID
       security:
         - bearerAuth: []
       responses:
@@ -1105,6 +916,54 @@ paths:
                     example: Profile deleted successfully
         "400":
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/profile/me:
+    get:
+      summary: Get current user profile
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/api/profile/{id}":
+    get:
+      summary: Get a profile by ID
+      tags:
+        - Profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The profile ID
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          description: Profile not found
           content:
             application/json:
               schema:

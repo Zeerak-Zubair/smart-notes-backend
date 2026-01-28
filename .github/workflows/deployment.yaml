@@ -1,9 +1,6 @@
 name: Deploy Docs to External Repository
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -12,8 +9,8 @@ jobs:
   deploy-docs:
     runs-on: ubuntu-latest
 
-    # Only run on push events, not on PRs (to avoid deploying from PRs)
-    if: github.event_name == 'push'
+    # Only run on PRs from dev to main
+    if: github.head_ref == 'dev'
 
     steps:
       - name: Checkout source repository

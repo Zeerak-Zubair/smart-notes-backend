@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase, supabaseService } from '../config/supabase';
 
 export async function uploadImage({
   file,
@@ -32,21 +32,48 @@ export async function uploadImage({
   return { publicUrl, filePath };
 }
 
+export async function createProfilePicture({
+  image_url,
+}: {
+  image_url: string;
+}) {
+  return supabaseService.from("profile_pictures").insert({
+    image_url
+  }).select().single();
+}
+
 export async function createProfile({
   name,
-  avatar_url,
+  profile_pic_id,
   email,
   user_id,
 }: {
   name: string;
-  avatar_url: string;
+  profile_pic_id?: string;
   email: string;
   user_id: string;
 }) {
   return supabase.from("profile").insert({
     name,
-    avatar_url,
+    profile_pic_id,
     email,
     user_id
   });
+}
+
+export async function deleteFile({
+  bucket,
+  path,
+}: {
+  bucket: string;
+  path: string;
+}) {
+  const { error } = await supabaseService.storage.from(bucket).remove([path]);
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deleteProfilePicture(id: string) {
+  return supabaseService.from("profile_pictures").delete().eq("id", id);
 }

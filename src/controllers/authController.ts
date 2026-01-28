@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../config/supabase';
-import { uploadImage, createProfile } from '../helpers/storage';
+import { uploadImage, createProfile, createProfilePicture } from '../helpers/storage';
 
 export async function signup(req: Request, res: Response, next: NextFunction) {
   try {
@@ -34,7 +34,7 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
     }
 
     console.log('[signup] User created in Auth:', { userId: data.user.id });
-    let avatarUrl = '';
+    let profilePicId: string | undefined = undefined;
 
     // Upload image if provided
     if (image) {
@@ -45,8 +45,21 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
           bucket: 'smart_notes',
           userId: data.user.id
         });
-        avatarUrl = publicUrl;
-        console.log('[signup] Avatar uploaded successfully');
+        
+        console.log('[signup] Avatar image uploaded, creating profile picture record');
+        const { data: picData, error: picError } = await createProfilePicture({
+            image_url: publicUrl
+        });
+
+        if (picError) {
+             console.error('[signup] Failed to create profile picture record:', picError);
+        } else {
+            const pic = picData as { id: string };
+            console.log('[signup] Profile picture record created:', { id: pic.id });
+            profilePicId = pic.id;
+        }
+
+        console.log('[signup] Avatar processing completed');
       } catch (uploadError) {
         console.error('[signup] Image upload failed:', uploadError);
         // Continue without avatar if upload fails
@@ -57,7 +70,7 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
     console.log('[signup] Creating user profile:', { userId: data.user.id });
     const { error: profileError } = await createProfile({
       name,
-      avatar_url: avatarUrl,
+      profile_pic_id: profilePicId,
       email,
       user_id: data.user.id
     });

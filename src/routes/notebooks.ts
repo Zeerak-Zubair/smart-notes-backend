@@ -20,13 +20,8 @@ router.use(requireAuth);
  *   get:
  *     summary: Get all notebooks (optionally filtered by folder)
  *     tags: [Notebooks]
- *     parameters:
- *       - in: query
- *         name: folder_id
- *         required: false
- *         schema:
- *           type: integer
- *         description: Filter notebooks by folder ID
+ *     parameters: []
+ *     description: Get all notebooks
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -54,55 +49,31 @@ router.use(requireAuth);
 router.get('/', getAllNotebooks);
 
 /**
- * @swagger
- * /api/notebooks/count/{id}:
- *   get:
- *     summary: Get count of all notebooks filtered by folder
- *     tags: [Notebooks]
- *     parameters:
- *       - in: query
- *         name: folder_id
- *         required: false
- *         schema:
- *           type: integer
- *         description: Filter notebooks by folder ID
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Count of notebooks
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 count:
- *                   type: integer
- *                   description: Total number of notebooks
- *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *
  */
 router.get('/count', getAllNotebooksCount);
 
 /**
  * @swagger
- * /api/notebooks/{id}:
- *   get:
+ * /api/notebooks/get:
+ *   post:
  *     summary: Get a notebook by ID
  *     tags: [Notebooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The notebook ID
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notebook_id
+ *             properties:
+ *               notebook_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The notebook ID
  *     responses:
  *       200:
  *         description: Notebook details
@@ -117,7 +88,7 @@ router.get('/count', getAllNotebooksCount);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', getNotebookById);
+router.post('/get', getNotebookById);
 
 /**
  * @swagger
@@ -137,7 +108,6 @@ router.get('/:id', getNotebookById);
  *               - title
  *               - description
  *               - color
- *               - folder_id
  *               - order_index
  *             properties:
  *               title:
@@ -152,10 +122,6 @@ router.get('/:id', getNotebookById);
  *                 type: string
  *                 description: Notebook color (hex code or color name)
  *                 example: "#3B82F6"
- *               folder_id:
- *                 type: integer
- *                 description: ID of the folder this notebook belongs to
- *                 example: 1
  *               order_index:
  *                 type: integer
  *                 description: Order position of the notebook
@@ -184,17 +150,10 @@ router.post('/', createNotebook);
 
 /**
  * @swagger
- * /api/notebooks/{id}:
+ * /api/notebooks:
  *   put:
  *     summary: Update a notebook
  *     tags: [Notebooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The notebook ID
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -203,7 +162,13 @@ router.post('/', createNotebook);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - notebook_id
  *             properties:
+ *               notebook_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The notebook ID
  *               title:
  *                 type: string
  *                 description: Updated notebook title
@@ -216,10 +181,6 @@ router.post('/', createNotebook);
  *                 type: string
  *                 description: Updated notebook color
  *                 example: "#10B981"
- *               folder_id:
- *                 type: integer
- *                 description: Updated folder ID
- *                 example: 2
  *               order_index:
  *                 type: integer
  *                 description: Updated order position
@@ -244,23 +205,29 @@ router.post('/', createNotebook);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', updateNotebook);
+router.put('/', updateNotebook);
 
 /**
  * @swagger
- * /api/notebooks/{id}:
+ * /api/notebooks:
  *   delete:
  *     summary: Delete a notebook
  *     tags: [Notebooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The notebook ID
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notebook_id
+ *             properties:
+ *               notebook_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The notebook ID
  *     responses:
  *       200:
  *         description: Notebook deleted successfully
@@ -279,6 +246,6 @@ router.put('/:id', updateNotebook);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:id', deleteNotebook);
+router.delete('/', deleteNotebook);
 
 export default router;

@@ -12,7 +12,6 @@ CREATE TABLE public.backups (
 ALTER TABLE public.backups ENABLE ROW LEVEL SECURITY;
 
 -- Notebooks Table
--- Changed: Removed folder_id, added user_id
 CREATE TABLE public.notebooks (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -28,7 +27,6 @@ CREATE TABLE public.notebooks (
 ALTER TABLE public.notebooks ENABLE ROW LEVEL SECURITY;
 
 -- Notes Table
--- Changed: notebook_id is now uuid
 CREATE TABLE public.notes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -42,29 +40,37 @@ CREATE TABLE public.notes (
 ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
 
 -- Media Table
--- Changed: note_id is now uuid, file_type changed to text (placeholder for USER-DEFINED)
 CREATE TABLE public.media (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   note_id uuid NOT NULL,
   file_url text NOT NULL,
-  file_type text NOT NULL, -- Originally USER-DEFINED in prompt
+  file_type text NOT NULL,
   file_size text,
   CONSTRAINT media_pkey PRIMARY KEY (id),
   CONSTRAINT media_note_id_fkey FOREIGN KEY (note_id) REFERENCES public.notes(id)
 );
 ALTER TABLE public.media ENABLE ROW LEVEL SECURITY;
 
+-- Profile Pictures Table
+CREATE TABLE public.profile_pictures (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  image_url text NOT NULL,
+  CONSTRAINT profile_pictures_pkey PRIMARY KEY (id)
+);
+ALTER TABLE public.profile_pictures ENABLE ROW LEVEL SECURITY;
+
 -- Profile Table
--- Changed: id column removed, user_id is now PK
 CREATE TABLE public.profile (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   name text NOT NULL,
-  avatar_url text NOT NULL DEFAULT 'https://wittwikunzfealyekurs.supabase.co/storage/v1/object/sign/smart_notes/default_avatar.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8yODZjN2M2OC03NGExLTQ1MDAtYTRiZS0wYmQ2ZGMwYzZmNjgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJzbWFydF9ub3Rlcy9kZWZhdWx0X2F2YXRhci5wbmciLCJpYXQiOjE3Njc2NTE3MzgsImV4cCI6MTc3MjgzNTczOH0.KN2l--X_AbTlr_5ScQbtflIxyEv22KkjF8y4YnA4Gwg'::text,
   updated_at timestamp with time zone,
   email text NOT NULL UNIQUE,
   user_id uuid NOT NULL,
+  profile_pic_id uuid,
   CONSTRAINT profile_pkey PRIMARY KEY (user_id),
-  CONSTRAINT profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT profile_profile_pic_id_fkey FOREIGN KEY (profile_pic_id) REFERENCES public.profile_pictures(id)
 );
 ALTER TABLE public.profile ENABLE ROW LEVEL SECURITY;

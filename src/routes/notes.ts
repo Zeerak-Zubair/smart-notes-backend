@@ -15,19 +15,25 @@ router.use(requireAuth);
 
 /**
  * @swagger
- * /api/notes:
- *   get:
- *     summary: Get all notes (optionally filtered by notebook)
+ * /api/notes/list:
+ *   post:
+ *     summary: Get all notes for a specific notebook
  *     tags: [Notes]
- *     parameters:
- *       - in: query
- *         name: notebook_id
- *         required: false
- *         schema:
- *           type: integer
- *         description: Filter notes by notebook ID
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notebook_id
+ *             properties:
+ *               notebook_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The notebook ID to filter by
  *     responses:
  *       200:
  *         description: List of notes
@@ -50,23 +56,29 @@ router.use(requireAuth);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', getAllNotes);
+router.post('/list', getAllNotes);
 
 /**
  * @swagger
- * /api/notes/{id}:
- *   get:
+ * /api/notes/get:
+ *   post:
  *     summary: Get a note by ID
  *     tags: [Notes]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The note ID
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - note_id
+ *             properties:
+ *               note_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The note ID
  *     responses:
  *       200:
  *         description: Note details
@@ -81,7 +93,7 @@ router.get('/', getAllNotes);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', getNoteById);
+router.post('/get', getNoteById);
 
 /**
  * @swagger
@@ -136,17 +148,10 @@ router.post('/', createNote);
 
 /**
  * @swagger
- * /api/notes/{id}:
+ * /api/notes:
  *   put:
  *     summary: Update a note
  *     tags: [Notes]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The note ID
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -155,15 +160,22 @@ router.post('/', createNote);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - note_id
  *             properties:
+ *               note_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The note ID
  *               content:
  *                 type: string
  *                 description: Updated note content
  *                 example: Updated note content
  *               notebook_id:
- *                 type: integer
+ *                 type: string
+ *                 format: uuid
  *                 description: Updated notebook ID
- *                 example: 2
+ *                 example: 123e4567-e89b-12d3-a456-426614174000
  *               order_index:
  *                 type: integer
  *                 description: Updated order position
@@ -188,23 +200,29 @@ router.post('/', createNote);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', updateNote);
+router.put('/', updateNote);
 
 /**
  * @swagger
- * /api/notes/{id}:
+ * /api/notes:
  *   delete:
  *     summary: Delete a note
  *     tags: [Notes]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The note ID
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - note_id
+ *             properties:
+ *               note_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The note ID
  *     responses:
  *       200:
  *         description: Note deleted successfully
@@ -223,6 +241,6 @@ router.put('/:id', updateNote);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:id', deleteNote);
+router.delete('/', deleteNote);
 
 export default router;

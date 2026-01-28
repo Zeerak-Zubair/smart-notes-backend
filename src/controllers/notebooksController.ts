@@ -10,7 +10,7 @@ export async function getAllNotebooks(req: Request, res: Response, next: NextFun
     console.log('[getAllNotebooks] Fetching notebooks from database');
     const { data, error } = await supabase
       .from('notebooks')
-      .select('*')
+      .select('id, title, description, color, order_index, created_at, updated_at')
       .eq('user_id', userId)
       .order('order_index', { ascending: true });
 
@@ -63,25 +63,30 @@ export async function getAllNotebooksCount(req: Request, res: Response, next: Ne
 
 export async function getNotebookById(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
+    const { notebook_id } = req.body;
     const userId = (req as any).userId;
-    console.log('[getNotebookById] Request received:', { id });
+    console.log('[getNotebookById] Request received:', { notebook_id });
 
-    console.log('[getNotebookById] Fetching notebook from database:', id);
+    if (!notebook_id) {
+        res.status(400).json({ error: 'notebook_id is required' });
+        return;
+    }
+
+    console.log('[getNotebookById] Fetching notebook from database:', notebook_id);
     const { data, error } = await supabase
       .from('notebooks')
-      .select('*')
-      .eq('id', id)
+      .select('id, title, description, color, order_index, created_at, updated_at')
+      .eq('id', notebook_id)
       .eq('user_id', userId) // Ensure user owns the notebook
       .single();
 
     if (error) {
-      console.error('[getNotebookById] Notebook not found or database error:', { id, error });
+      console.error('[getNotebookById] Notebook not found or database error:', { notebook_id, error });
       res.status(404).json({ error: 'Notebook not found' });
       return;
     }
 
-    console.log('[getNotebookById] Successfully fetched notebook:', { id });
+    console.log('[getNotebookById] Successfully fetched notebook:', { notebook_id });
     res.status(200).json(data);
   } catch (error) {
     console.error('[getNotebookById] Unexpected error:', error);
@@ -117,7 +122,7 @@ export async function createNotebook(req: Request, res: Response, next: NextFunc
         order_index,
         updated_at: new Date().toISOString()
       }])
-      .select()
+      .select('id, title, description, color, order_index, created_at, updated_at')
       .single();
 
     if (error) {
@@ -139,10 +144,14 @@ export async function createNotebook(req: Request, res: Response, next: NextFunc
 
 export async function updateNotebook(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
-    const { title, description, color}: UpdateNotebookDTO = req.body;
+    const { notebook_id, title, description, color }: UpdateNotebookDTO & { notebook_id: string } = req.body;
     const userId = (req as any).userId;
-    console.log('[updateNotebook] Request received:', { id, title, description, color });
+    console.log('[updateNotebook] Request received:', { notebook_id, title, description, color });
+
+    if (!notebook_id) {
+      res.status(400).json({ error: 'notebook_id is required' });
+      return;
+    }
 
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -152,13 +161,13 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
     if (description !== undefined) updateData.description = description;
     if (color !== undefined) updateData.color = color;
 
-    console.log('[updateNotebook] Updating notebook in database:', { id, updateFields: Object.keys(updateData) });
+    console.log('[updateNotebook] Updating notebook in database:', { notebook_id, updateFields: Object.keys(updateData) });
     const { data, error } = await supabase
       .from('notebooks')
       .update(updateData)
-      .eq('id', id)
+      .eq('id', notebook_id)
       .eq('user_id', userId) // Ensure ownership
-      .select()
+      .select('id, title, description, color, order_index, created_at, updated_at')
       .single();
 
     if (error) {
@@ -167,7 +176,7 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    console.log('[updateNotebook] Notebook updated successfully:', { id });
+    console.log('[updateNotebook] Notebook updated successfully:', { notebook_id });
     res.status(200).json({
       message: 'Notebook updated successfully',
       notebook: data
@@ -180,15 +189,20 @@ export async function updateNotebook(req: Request, res: Response, next: NextFunc
 
 export async function deleteNotebook(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params;
+    const { notebook_id } = req.body;
     const userId = (req as any).userId;
-    console.log('[deleteNotebook] Request received:', { id });
+    console.log('[deleteNotebook] Request received:', { notebook_id });
 
-    console.log('[deleteNotebook] Deleting notebook from database:', id);
+    if (!notebook_id) {
+        res.status(400).json({ error: 'notebook_id is required' });
+        return;
+    }
+
+    console.log('[deleteNotebook] Deleting notebook from database:', notebook_id);
     const { error } = await supabase
       .from('notebooks')
       .delete()
-      .eq('id', id)
+      .eq('id', notebook_id)
       .eq('user_id', userId); // Ensure ownership
 
     if (error) {
@@ -197,7 +211,7 @@ export async function deleteNotebook(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    console.log('[deleteNotebook] Notebook deleted successfully:', { id });
+    console.log('[deleteNotebook] Notebook deleted successfully:', { notebook_id });
     res.status(200).json({
       message: 'Notebook deleted successfully'
     });

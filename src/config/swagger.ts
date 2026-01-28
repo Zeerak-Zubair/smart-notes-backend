@@ -90,34 +90,6 @@ const options: swaggerJsdoc.Options = {
           },
           required: ['id', 'created_at', 'notebook_id'],
         },
-        Folder: {
-          type: 'object',
-          properties: {
-            id: {
-              type: 'integer',
-              description: 'Folder ID',
-              example: 1,
-            },
-            created_at: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Creation timestamp',
-              example: '2024-01-01T12:00:00Z',
-            },
-            title: {
-              type: 'string',
-              description: 'Folder title',
-              example: 'Work Projects',
-            },
-            user_id: {
-              type: 'string',
-              format: 'uuid',
-              description: 'ID of the user who owns the folder',
-              example: '123e4567-e89b-12d3-a456-426614174000',
-            },
-          },
-          required: ['id', 'created_at', 'title', 'user_id'],
-        },
         Notebook: {
           type: 'object',
           properties: {
@@ -153,18 +125,13 @@ const options: swaggerJsdoc.Options = {
               description: 'Last update timestamp',
               example: '2024-01-01T12:00:00Z',
             },
-            folder_id: {
-              type: 'integer',
-              description: 'ID of the folder this notebook belongs to',
-              example: 1,
-            },
             order_index: {
               type: 'integer',
               description: 'Order position of the notebook',
               example: 0,
             },
           },
-          required: ['id', 'created_at', 'title', 'description', 'color', 'updated_at', 'folder_id', 'order_index'],
+          required: ['id', 'created_at', 'title', 'description', 'color', 'updated_at', 'order_index'],
         },
         Profile: {
           type: 'object',
@@ -203,13 +170,7 @@ const options: swaggerJsdoc.Options = {
               description: 'User\'s email address (unique)',
               example: 'john.doe@example.com',
             },
-            user_id: {
-              type: 'string',
-              format: 'uuid',
-              nullable: true,
-              description: 'Associated user ID from auth.users',
-              example: '123e4567-e89b-12d3-a456-426614174000',
-            },
+
           },
           required: ['id', 'created_at', 'name', 'avatar_url', 'email'],
         },

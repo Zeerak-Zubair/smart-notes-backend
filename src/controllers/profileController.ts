@@ -1,242 +1,128 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/supabase';
-import { CreateProfileDTO, UpdateProfileDTO } from '../types';
-import { uploadImage } from '../helpers/storage';
+import { supabase, supabaseService } from '../config/supabase';
+import { UpdateProfileDTO } from '../types';
+import { deleteFile, deleteProfilePicture, uploadImage } from '../helpers/storage';
 
-export async function getAllProfiles(req: Request, res: Response, next: NextFunction) {
-  try {
-    console.log('[getAllProfiles] Request received');
 
-    console.log('[getAllProfiles] Fetching profiles from database');
-    const { data, error } = await supabase
-      .from('profile')
-      .select('*')
-      .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('[getAllProfiles] Database error:', error);
-      res.status(400).json({ error: error.message });
-      return;
-    }
-
-    console.log('[getAllProfiles] Successfully fetched profiles:', { count: data.length });
-    res.status(200).json({
-      profiles: data,
-      count: data.length
-    });
-  } catch (error) {
-    console.error('[getAllProfiles] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function getCurrentProfile(req: Request, res: Response, next: NextFunction) {
+export async function updateProfilePicture(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).userId;
-    console.log('[getCurrentProfile] Request received for user:', userId);
-
-    console.log('[getCurrentProfile] Fetching profile from database:', userId);
-    const { data, error } = await supabase
-      .from('profile')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      console.error('[getCurrentProfile] Profile not found or database error:', { userId, error });
-      res.status(404).json({ error: 'Profile not found' });
-      return;
-    }
-
-    console.log('[getCurrentProfile] Successfully fetched profile:', { userId });
-    res.status(200).json(data);
-  } catch (error) {
-    console.error('[getCurrentProfile] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function getProfileById(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { id } = req.params; // This id is arguably user_id based on schema
-    console.log('[getProfileById] Request received:', { id });
-
-    console.log('[getProfileById] Fetching profile from database:', id);
-    const { data, error } = await supabase
-      .from('profile')
-      .select('*')
-      .eq('user_id', id)
-      .single();
-
-    if (error) {
-      console.error('[getProfileById] Profile not found or database error:', { id, error });
-      res.status(404).json({ error: 'Profile not found' });
-      return;
-    }
-
-    console.log('[getProfileById] Successfully fetched profile:', { id });
-    res.status(200).json(data);
-  } catch (error) {
-    console.error('[getProfileById] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function getProfileByUserId(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { user_id } = req.params;
-    console.log('[getProfileByUserId] Request received:', { user_id });
-
-    console.log('[getProfileByUserId] Fetching profile from database by user_id:', user_id);
-    const { data, error } = await supabase
-      .from('profile')
-      .select('*')
-      .eq('user_id', user_id)
-      .single();
-
-    if (error) {
-      console.error('[getProfileByUserId] Profile not found or database error:', { user_id, error });
-      res.status(404).json({ error: 'Profile not found' });
-      return;
-    }
-
-    console.log('[getProfileByUserId] Successfully fetched profile:', { user_id });
-    res.status(200).json(data);
-  } catch (error) {
-    console.error('[getProfileByUserId] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function createProfile(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { name, email, avatar_url }: CreateProfileDTO = req.body;
-    const userId = (req as any).userId;
-
-    console.log('[createProfile] Request received:', { name, email, hasAvatar: !!avatar_url, userId });
-
-    if (!name || !email || !userId) {
-      console.log('[createProfile] Validation failed:', { name: !!name, email: !!email, userId: !!userId });
-      res.status(400).json({ error: 'name and email are required' });
-      return;
-    }
-
-    const insertData: any = {
-      name,
-      email,
-      user_id: userId,
-      updated_at: new Date().toISOString()
-    };
-
-    if (avatar_url !== undefined) insertData.avatar_url = avatar_url;
-
-    console.log('[createProfile] Creating profile in database');
-    const { data, error } = await supabase
-      .from('profile')
-      .insert([insertData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[createProfile] Database error:', error);
-      res.status(400).json({ error: error.message });
-      return;
-    }
-
-    console.log('[createProfile] Profile created successfully:', { user_id: userId });
-    res.status(201).json({
-      message: 'Profile created successfully',
-      profile: data
-    });
-  } catch (error) {
-    console.error('[createProfile] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function updateProfile(req: Request, res: Response, next: NextFunction) {
-  try {
-    const userId = (req as any).userId;
-    const { name } = req.body;
     const image = req.file;
 
-    console.log('[updateProfile] Request received:', { userId, name, hasImage: !!image });
+    console.log('[updateProfilePicture] Request received:', { userId, hasImage: !!image });
 
-    let avatarUrl = '';
-
-    // Upload image if provided
-    if (image) {
-      try {
-        console.log('[updateProfile] Uploading avatar image:', { userId });
-        const { publicUrl } = await uploadImage({
-          file: image,
-          bucket: 'smart_notes',
-          userId: userId
-        });
-        avatarUrl = publicUrl;
-        console.log('[updateProfile] Avatar uploaded successfully:', { avatarUrl });
-      } catch (uploadError) {
-        console.error('[updateProfile] Image upload failed:', uploadError);
-        res.status(500).json({ error: 'Failed to upload image' });
-        return;
-      }
+    if (!image) {
+      res.status(400).json({ error: 'Image file is required' });
+      return;
     }
 
-    const updateData: any = {
-      updated_at: new Date().toISOString()
-    };
+    // 1. Upload new image
+    console.log('[updateProfilePicture] Uploading image:', { userId });
+    let publicUrl = '';
+    try {
+        const result = await uploadImage({
+            file: image,
+            bucket: 'smart_notes',
+            userId: userId
+        });
+        publicUrl = result.publicUrl;
+    } catch (uploadError) {
+        console.error('[updateProfilePicture] Image upload failed:', uploadError);
+        res.status(500).json({ error: 'Failed to upload image' });
+        return;
+    }
 
-    if (name !== undefined) updateData.name = name;
-    if (avatarUrl) updateData.avatar_url = avatarUrl;
+    // 2. Create profile_picture record
+    // We import createProfilePicture from helpers/storage
+    const { createProfilePicture } = await import('../helpers/storage');
+    console.log('[updateProfilePicture] Creating profile picture record');
+    
+    const { data: picData, error: picError } = await createProfilePicture({
+        image_url: publicUrl
+    });
 
-    console.log('[updateProfile] Updating profile in database:', { userId, updateFields: Object.keys(updateData) });
+    if (picError) {
+        console.error('[updateProfilePicture] Failed to create profile picture record:', picError);
+        res.status(500).json({ error: 'Failed to save profile picture record' });
+        return;
+    }
+
+    const pic = picData as { id: string };
+    const profilePicId = pic.id;
+
+    // 3. Get the OLD profile picture ID before we update the profile
+    console.log('[updateProfilePicture] Fetching users current profile to check for existing picture');
+    const { data: currentProfile } = await supabase
+        .from('profile')
+        .select('profile_pic_id')
+        .eq('user_id', userId)
+        .single();
+
+    const oldProfilePicId = currentProfile?.profile_pic_id;
+
+    // 4. Update user profile to link to new picture
+    console.log('[updateProfilePicture] Updating user profile with new picture ID:', { userId, profilePicId });
     const { data, error } = await supabase
       .from('profile')
-      .update(updateData)
+      .update({ 
+          profile_pic_id: profilePicId,
+          updated_at: new Date().toISOString()
+      })
       .eq('user_id', userId)
-      .select()
+      .select('user_id, name, email, profile_pic_id, created_at, updated_at')
       .single();
 
     if (error) {
-      console.error('[updateProfile] Database error:', error);
+      console.error('[updateProfilePicture] Database error:', error);
       res.status(400).json({ error: error.message });
       return;
     }
 
-    console.log('[updateProfile] Profile updated successfully:', { userId });
+    // 5. Delete the old profile picture and file if it existed
+    if (oldProfilePicId) {
+        console.log('[updateProfilePicture] Deleting old profile picture:', { oldProfilePicId });
+        
+        // Fetch the old picture record to get the URL
+        const { data: oldPicData } = await supabaseService
+            .from('profile_pictures')
+            .select('image_url')
+            .eq('id', oldProfilePicId)
+            .single();
+
+        console.log('[updateProfilePicture] Old profile picture data:', oldPicData); 
+           
+        if (oldPicData?.image_url) {
+            // Extract file path from URL
+            // URL format: .../storage/v1/object/public/smart_notes/filename.ext
+            const fileUrl = oldPicData.image_url;
+            const bucketName = 'smart_notes';
+            
+            // Allow for different URL structures (signed vs public)
+            // Simple extraction: last part of URL is usually the filename in this setup
+            // or we can split by bucket name
+            const parts = fileUrl.split(`${bucketName}/`);
+            if (parts.length > 1) {
+                const filePath = parts[1];
+                console.log('[updateProfilePicture] Deleting old file from storage:', { filePath });
+                
+                // Fire and forget - don't block response on cleanup
+                Promise.all([
+                    deleteFile({ bucket: bucketName, path: filePath }).catch(e => console.error('Failed to delete old file:', e)),
+                    deleteProfilePicture(oldProfilePicId).catch(e => console.error('Failed to delete old db record:', e))
+                ]).then(() => console.log('[updateProfilePicture] Cleanup complete'));
+            }
+        }
+    }
+
+    console.log('[updateProfilePicture] Profile updated successfully:', { userId });
     res.status(200).json({
-      message: 'Profile updated successfully',
+      message: 'Profile picture updated successfully',
       profile: data
     });
+
   } catch (error) {
-    console.error('[updateProfile] Unexpected error:', error);
-    next(error);
-  }
-}
-
-export async function deleteProfile(req: Request, res: Response, next: NextFunction) {
-  try {
-    const userId = (req as any).userId;
-    console.log('[deleteProfile] Request received:', { userId });
-
-    console.log('[deleteProfile] Deleting profile from database:', { userId });
-    const { error } = await supabase
-      .from('profile')
-      .delete()
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('[deleteProfile] Database error:', error);
-      res.status(400).json({ error: error.message });
-      return;
-    }
-
-    console.log('[deleteProfile] Profile deleted successfully:', { userId });
-    res.status(200).json({
-      message: 'Profile deleted successfully'
-    });
-  } catch (error) {
-    console.error('[deleteProfile] Unexpected error:', error);
+    console.error('[updateProfilePicture] Unexpected error:', error);
     next(error);
   }
 }

@@ -726,6 +726,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /api/profile:
+    get:
+      summary: Get user profile
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  avatar_url:
+                    type: string
+                    nullable: true
+        "404":
+          description: Profile not found
   /api/profile/picture:
     put:
       summary: Update profile picture

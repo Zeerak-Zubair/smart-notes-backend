@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
-  updateProfilePicture
+  updateProfilePicture,
+  getProfile
 } from '../controllers/profileController';
 import { requireAuth } from '../middleware/auth';
 import { upload } from '../middleware/upload';
@@ -9,6 +10,34 @@ const router = Router();
 
 // Apply authentication middleware to all routes
 router.use(requireAuth);
+
+/**
+ * @swagger
+ * /api/profile:
+ *   get:
+ *     summary: Get user profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 avatar_url:
+ *                   type: string
+ *                   nullable: true
+ *       404:
+ *         description: Profile not found
+ */
+router.get('/', getProfile);
 
 /**
  * @swagger

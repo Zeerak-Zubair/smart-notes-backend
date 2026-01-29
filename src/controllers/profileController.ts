@@ -5,6 +5,52 @@ import { deleteFile, deleteProfilePicture, uploadImage } from '../helpers/storag
 
 
 
+
+export async function getProfile(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).userId;
+    console.log('[getProfile] Fetching profile for user:', userId);
+
+    const { data: profile, error } = await supabase
+      .from('profile')
+      .select(`
+        name,
+        email,
+        profile_pic_id
+      `)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('[getProfile] Error fetching profile:', error);
+      res.status(404).json({ error: 'Profile not found' });
+      return;
+    }
+
+    let avatar_url = null;
+    if (profile.profile_pic_id) {
+       const { data: picData } = await supabase
+        .from('profile_pictures')
+        .select('image_url')
+        .eq('id', profile.profile_pic_id)
+        .single();
+        
+        if (picData) {
+            avatar_url = picData.image_url;
+        }
+    }
+
+    res.status(200).json({
+      name: profile.name,
+      email: profile.email,
+      avatar_url: avatar_url
+    });
+  } catch (error) {
+    console.error('[getProfile] Unexpected error:', error);
+    next(error);
+  }
+}
+
 export async function updateProfilePicture(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).userId;
